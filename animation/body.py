@@ -32,12 +32,13 @@ class Body():
         dx = x_old-x_external_body
         dy = y_old-y_external_body
 
-        m = external_body.params[0]
+        m_self = self.params[0]
+        m_ext = external_body.params[0]
 
         r = math.sqrt(dx**2 + dy**2)
 
-        v_next = v_old - G*m/r**3 * dx*self.dt
-        u_next = u_old - G*m/r**3 * dy*self.dt
+        v_next = v_old - G*m_ext/r**3 * dx*self.dt
+        u_next = u_old - G*m_ext/r**3 * dy*self.dt
 
         x_next = x_old + v_old * self.dt
         y_next = y_old + u_old * self.dt
@@ -47,20 +48,47 @@ class Body():
         else:
             self.current_conditions = [v_next, x_next, u_next, y_next, r]
 
+        # Center of mass of the system
+        x_center_of_mass = (m_self*x_old + m_ext*external_body.current_conditions[1]) / (m_self + m_ext)
+        y_center_of_mass = (m_self*y_old + m_ext*external_body.current_conditions[3]) / (m_self + m_ext)
+        self.center_of_mass = [x_center_of_mass, y_center_of_mass]
+
         if self.trail:
             self.i += 1
-            if self.i % 7 == 0:
-                self.trail_points_x.append(x_next)
-                self.trail_points_y.append(y_next)
+
+            self.trail_points_x.append(x_next)
+            self.trail_points_y.append(y_next)
 
         return self.current_conditions
 
-    def draw(self, screen, scaling):
-        pygame.draw.circle(screen, self.color, (1280/2 + self.current_conditions[1]*scaling, 720/2 + self.current_conditions[3]*scaling), radius=max(self.params[0]**0.27*scaling,2))
-
+    def draw(self, screen, scaling, offsets, highlight=False):
         if self.trail:
+            if highlight:
+                color = "white"
+                size = 3
+            else:
+                color = self.color
+                size = 1
             for i in range(len(self.trail_points_x)):
-                pygame.draw.circle(screen, self.color, (1280/2 + self.trail_points_x[i]*scaling, 720/2 + self.trail_points_y[i]*scaling), 1)
+                pygame.draw.circle(screen, color, (1280/2 + self.trail_points_x[i]*scaling + offsets[0], 720/2 + self.trail_points_y[i]*scaling + offsets[1]), size)
+            
+        if highlight:
+            pygame.draw.circle(
+            screen, 
+            "white", 
+            (1280/2 + self.current_conditions[1]*scaling + offsets[0], 720/2 + self.current_conditions[3]*scaling + offsets[1]), 
+            radius=max(self.params[0]**0.27*scaling*0.2,2) + 4
+            )
+
+        pygame.draw.circle(
+            screen, 
+            self.color, 
+            (1280/2 + self.current_conditions[1]*scaling + offsets[0], 720/2 + self.current_conditions[3]*scaling + offsets[1]), 
+            radius=max(self.params[0]**0.27*scaling*0.2,2
+            ))
+
+    def get_center_of_system(self):
+        return self.center_of_mass
 
     def reset(self):
         self.current_conditions = self.init_cond
