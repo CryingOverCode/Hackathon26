@@ -1,5 +1,5 @@
 import pygame
-from orbit import next_pos
+from body import Body
 
 # pygame setup
 pygame.init()
@@ -14,7 +14,7 @@ y_data_points = []
 
 # Parameters
 r = 6771000
-m = 3.285e23
+m_earth = 5.97219e23 * 1.6
 G = 6.6743e-11
 
 scaling = 200/r
@@ -22,20 +22,26 @@ scaling = 200/r
 # Initial Conditions
 initial_x = r
 initial_v = 0
-initial_y = 0
-initial_u = 9000
+initial_y = 2000000
+initial_u = 1525
 
-x_old = initial_x
-v_old = initial_v
-y_old = initial_y
-u_old = initial_u
+DT = 20
 
-old_pos = [v_old, x_old, u_old, y_old]
+earth = Body(
+    parameters=[m_earth],
+    initial_conditions=[initial_v, initial_x, 0, initial_y],
+    dt = DT,
+    color = "red"
+)
 
-i = 0
+earth2 = Body(
+    parameters=[m_earth],
+    initial_conditions=[initial_v, -initial_x, 0, -initial_y],
+    dt = DT,
+    color = "green"
+)
 
 while running:
-    i+=1
 
     # poll for events
     # pygame.QUIT event means the user clicked X to close your window
@@ -46,21 +52,14 @@ while running:
     # fill the screen with a color to wipe away anything from last frame
     screen.fill("black")
 
-    pygame.draw.circle(screen, "blue", (1280/2,720/2), 637100*scaling)
+    pygame.draw.circle(screen, "white", (1280/2,720/2), 2)
 
-    new_pos = next_pos(old_pos)
-    
-    x_data_points.append(new_pos[1])
-    y_data_points.append(new_pos[3])
+    earth.update_position(earth2)
+    earth2.update_position(earth)
 
-    for i in range(len(x_data_points)):
-        pygame.draw.circle(screen, "grey", (1280/2 + x_data_points[i]*scaling, 720/2 + y_data_points[i]*scaling), 1)
+    earth.draw(screen, scaling)
+    earth2.draw(screen, scaling)
 
-    pygame.draw.circle(screen, "white", (1280/2 + new_pos[1]*scaling, 720/2 + new_pos[3]*scaling), 4)
-    
-    old_pos = new_pos
-
-    print(new_pos[4])
 
     # flip() the display to put your work on screen
     pygame.display.flip()
