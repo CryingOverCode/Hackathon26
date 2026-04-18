@@ -19,7 +19,7 @@ class Body():
         self.trail_points_y = []
         self.color = color
 
-    def update_position(self, external_body, centered = False):
+    def update_position(self, external_body, stationary = False, method="Euler"):
         # current_conditions = [v_old, x_old, u_old, y_old]
         v_old = self.current_conditions[0]
         x_old = self.current_conditions[1]
@@ -37,13 +37,14 @@ class Body():
 
         r = math.sqrt(dx**2 + dy**2)
 
-        v_next = v_old - G*m_ext/r**3 * dx*self.dt
-        u_next = u_old - G*m_ext/r**3 * dy*self.dt
+        if method == "Euler":
+            v_next = v_old - G*m_ext/r**3 * dx*self.dt
+            u_next = u_old - G*m_ext/r**3 * dy*self.dt
 
-        x_next = x_old + v_old * self.dt
-        y_next = y_old + u_old * self.dt
+            x_next = x_old + v_old * self.dt
+            y_next = y_old + u_old * self.dt
 
-        if centered:
+        if stationary:
             self.current_conditions = self.current_conditions
         else:
             self.current_conditions = [v_next, x_next, u_next, y_next, r]
